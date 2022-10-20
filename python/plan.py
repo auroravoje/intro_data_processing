@@ -64,6 +64,8 @@
 
 # %%
 import pandas as pd
+# %%
+import matplotlib.pyplot as plt
 
 # %% [markdown]
 # ### Read Excel data with pandas
@@ -79,6 +81,8 @@ pd.read_excel("../data/kap1.xlsx", sheet_name="1.2")
 
 # %%
 pd.read_excel("../data/kap1.xlsx", sheet_name="1.2").info()
+
+
 
 # %% [markdown]
 # ### Add parameters to read Excel data properly
@@ -103,6 +107,7 @@ budget.loc["Norge"]
 
 # %%
 pd.read_excel("../data/kap1.xlsx", sheet_name="1.2", header=4, index_col=0)
+
 
 # %%
 budget = pd.read_excel("../data/kap1.xlsx", sheet_name="1.2", header=4, index_col=0)
@@ -189,6 +194,7 @@ income.melt(id_vars=["category"])
 # %%
 income.melt(id_vars=["category"], var_name="year")
 
+
 # %%
 income.melt(id_vars=["category"], var_name="year", value_name="income")
 
@@ -229,6 +235,7 @@ schedule = pd.DataFrame(
 # %%
 schedule.melt(id_vars=["hour"], var_name="channel", value_name="program")
 
+
 # %% [markdown]
 # ## Process Data
 
@@ -237,6 +244,7 @@ schedule.melt(id_vars=["hour"], var_name="channel", value_name="program")
 
 # %%
 income.info()
+
 
 # %%
 (
@@ -323,7 +331,7 @@ budget.iloc[4:9]
 budget.iloc[5:8, 0]
 
 # %%
-budget.loc["Norge", "tiltak"]
+budget.loc["Norge", "tiltak"]   
 
 # %%
 budget.loc["Norge", budget.columns[1]]
