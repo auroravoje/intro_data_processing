@@ -79,8 +79,6 @@ pd.read_excel("../data/kap1.xlsx", sheet_name="1.2")
 # %%
 pd.read_excel("../data/kap1.xlsx", sheet_name="1.2").info()
 
-
-
 # %% [markdown]
 # ### Add parameters to read Excel data properly
 
@@ -337,7 +335,7 @@ budget.iloc[4:9]
 budget.iloc[5:8, 0]
 
 # %%
-budget.loc["Norge", "tiltak"]   
+budget.loc["Norge", "tiltak"]
 
 # %%
 budget.loc["Norge", budget.columns[1]]
@@ -620,26 +618,57 @@ num_trips_to
 pd.merge(num_trips_from, num_trips_to)
 
 # %%
-pd.merge(num_trips_from, num_trips_to, left_on="start_station_name", right_on="end_station_name")
+pd.merge(
+    num_trips_from,
+    num_trips_to,
+    left_on="start_station_name",
+    right_on="end_station_name",
+)
 
 # %%
 popular_from = num_trips_from.nlargest(10, "num_trips")
 popular_to = num_trips_to.nlargest(10, "num_trips")
 
 # %%
-pd.merge(popular_from, popular_to, left_on="start_station_name", right_on="end_station_name")
+pd.merge(
+    popular_from, popular_to, left_on="start_station_name", right_on="end_station_name"
+)
 
 # %%
-pd.merge(popular_from, popular_to, how="inner", left_on="start_station_name", right_on="end_station_name")
+pd.merge(
+    popular_from,
+    popular_to,
+    how="inner",
+    left_on="start_station_name",
+    right_on="end_station_name",
+)
 
 # %%
-pd.merge(popular_from, popular_to, how="left", left_on="start_station_name", right_on="end_station_name")
+pd.merge(
+    popular_from,
+    popular_to,
+    how="left",
+    left_on="start_station_name",
+    right_on="end_station_name",
+)
 
 # %%
-pd.merge(popular_from, popular_to, how="right", left_on="start_station_name", right_on="end_station_name")
+pd.merge(
+    popular_from,
+    popular_to,
+    how="right",
+    left_on="start_station_name",
+    right_on="end_station_name",
+)
 
 # %%
-pd.merge(popular_from, popular_to, how="outer", left_on="start_station_name", right_on="end_station_name")
+pd.merge(
+    popular_from,
+    popular_to,
+    how="outer",
+    left_on="start_station_name",
+    right_on="end_station_name",
+)
 
 # %% [markdown]
 # ### Exercise
@@ -651,6 +680,19 @@ pd.merge(popular_from, popular_to, how="outer", left_on="start_station_name", ri
 # ### Mess up data for presentation
 
 # %%
+from_to = (
+    trips.groupby(["start_station_name", "end_station_name"])
+    .agg(num_trips=("start_station_name", "size"))
+    .reset_index()
+    .sort_values(by="num_trips")
+)
+
+# %%
+from_to.query(
+    "start_station_name.isin(@popular_from.start_station_name) and end_station_name.isin(@popular_to.end_station_name)"
+).pivot_table(
+    index="start_station_name", columns="end_station_name", values="num_trips"
+)
 
 # %% [markdown]
 # ### Save to Excel
@@ -658,5 +700,25 @@ pd.merge(popular_from, popular_to, how="outer", left_on="start_station_name", ri
 # %% [markdown]
 # ### More visualizations
 
-# %% [markdown]
-#
+# %%
+from_to
+
+# %%
+num_trips_to = (
+    trips.groupby("end_station_name")
+    .agg(num_trips=("end_station_name", "size"), lat=("end_station_latitude", "first"), lon=("end_station_longitude", "first"))
+    .sort_values(by="num_trips")
+    .reset_index()
+)
+
+# %%
+import numpy as np
+pd.merge(
+    num_trips_from,
+    num_trips_to,
+    left_on="start_station_name",
+    right_on="end_station_name",
+    suffixes=("_from", "_to")
+).assign(from_over_to=lambda df: np.log(df.num_trips_from/df.num_trips_to)).plot.scatter(x="lon", y="lat", c="from_over_to")
+
+# %%
