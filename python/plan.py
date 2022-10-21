@@ -64,9 +64,6 @@
 
 # %%
 import pandas as pd
-# %%
-import matplotlib.pyplot as plt
-
 # %% [markdown]
 # ### Read Excel data with pandas
 
@@ -516,32 +513,32 @@ trips.groupby(["start_station_name", "end_station_name"]).agg(
 # We have two files with the same kinds of data: `08.csv` with data for August and `09.csv` with data for September. How can we combine them into one DataFrame?
 
 # %%
-data_aug = pd.read_csv("../data/08.csv", parse_dates=["started_at", "ended_at"])
-data_sep = pd.read_csv("../data/09.csv", parse_dates=["started_at", "ended_at"])
+trips_aug = pd.read_csv("../data/08.csv", parse_dates=["started_at", "ended_at"])
+trips_sep = pd.read_csv("../data/09.csv", parse_dates=["started_at", "ended_at"])
 
 # %% [markdown]
 # ### Append tables with similar data
 
 # %%
-pd.concat([data_aug, data_sep])
+pd.concat([trips_aug, trips_sep])
 
 # %%
-pd.concat([data_aug, data_sep]).reset_index()
+pd.concat([trips_aug, trips_sep]).reset_index()
 
 # %%
-pd.concat([data_aug, data_sep]).reset_index(drop=True)
-
-# %%
-for filnavn in ["../data/08.csv", "../data/09.csv"]:
-    print(filnavn)
+pd.concat([trips_aug, trips_sep]).reset_index(drop=True)
 
 # %%
 for filnavn in ["../data/08.csv", "../data/09.csv"]:
     print(filnavn)
-    data = pd.read_csv(filnavn, parse_dates=["started_at", "ended_at"])
 
 # %%
-data.started_at
+for filnavn in ["../data/08.csv", "../data/09.csv"]:
+    print(filnavn)
+    trips = pd.read_csv(filnavn, parse_dates=["started_at", "ended_at"])
+
+# %%
+trips.started_at
 
 # %%
 months = []
@@ -557,7 +554,7 @@ months = []
 for filnavn in ["../data/08.csv", "../data/09.csv"]:
     print(filnavn)
     months.append(pd.read_csv(filnavn, parse_dates=["started_at", "ended_at"]))
-data = pd.concat(months).reset_index(drop=True)
+trips = pd.concat(months).reset_index(drop=True)
 
 # %%
 data
@@ -578,7 +575,7 @@ months = []
 for filnavn in ["../data/08.csv", "../data/09.csv"]:
     print(filnavn)
     months.append(pd.read_csv(filnavn, parse_dates=["started_at", "ended_at"]))
-data = pd.concat(months).reset_index(drop=True)
+trips = pd.concat(months).reset_index(drop=True)
 
 # %% [markdown]
 # ### Exercise
@@ -592,11 +589,57 @@ num_trips
 # %%
 trip_lengths = (
     trips.groupby("start_station_name")
-    .agg({"duration": "median"})
+    .agg(median_duration=("duration", "median"))
     .reset_index()
-    .sort_values(by="duration")
+    .sort_values(by="median_duration")
 )
 trip_lengths
+
+# %%
+pd.merge(num_trips, trip_lengths)
+
+# %%
+num_trips_from = (
+    trips.groupby("start_station_name")
+    .agg(num_trips=("start_station_name", "size"))
+    .sort_values(by="num_trips")
+    .reset_index()
+)
+num_trips_from
+
+# %%
+num_trips_to = (
+    trips.groupby("end_station_name")
+    .agg(num_trips=("end_station_name", "size"))
+    .sort_values(by="num_trips")
+    .reset_index()
+)
+num_trips_to
+
+# %%
+pd.merge(num_trips_from, num_trips_to)
+
+# %%
+pd.merge(num_trips_from, num_trips_to, left_on="start_station_name", right_on="end_station_name")
+
+# %%
+popular_from = num_trips_from.nlargest(10, "num_trips")
+popular_to = num_trips_to.nlargest(10, "num_trips")
+
+# %%
+pd.merge(popular_from, popular_to, left_on="start_station_name", right_on="end_station_name")
+
+# %%
+pd.merge(popular_from, popular_to, how="inner", left_on="start_station_name", right_on="end_station_name")
+
+# %%
+pd.merge(popular_from, popular_to, how="left", left_on="start_station_name", right_on="end_station_name")
+
+# %%
+pd.merge(popular_from, popular_to, how="right", left_on="start_station_name", right_on="end_station_name")
+
+# %%
+pd.merge(popular_from, popular_to, how="outer", left_on="start_station_name", right_on="end_station_name")
 
 # %% [markdown]
 # ### Exercise
@@ -606,6 +649,8 @@ trip_lengths
 
 # %% [markdown]
 # ### Mess up data for presentation
+
+# %%
 
 # %% [markdown]
 # ### Save to Excel
