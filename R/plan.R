@@ -5,10 +5,11 @@ library(readxl)
 #run by line windows: shift + enter 
 #run by line mac: command + enter)
 # indent code mac: command + I 
+# code multiple lines: shift + command + c
 
 #set working directory
 setwd("/Users/avoje001/Documents/customers/FFI/intro_data_processing")
-
+data_path = paste(getwd(),"/data/",sep="")
 #read data:
 #pd.read_excel("../data/kap1.xlsx")
 read_excel(paste(getwd(),"/data/kap1.xlsx",sep="")) %>% View()
@@ -457,47 +458,62 @@ budget %>% arrange(land)
 pd.read_csv("../data/09.csv")
 
 # %%
-trips = pd.read_csv("../data/09.csv")
-
+trips = pd.read_csv()
+trips = read_csv(paste(data_path,"/09.csv",sep=""))
 # %%
-trips.info()
-
+#trips.info()
+spec(trips)
 # %% [markdown]
 # ### Date columns
 
-# %%
-trips = pd.read_csv("../data/09.csv", parse_dates=["started_at", "ended_at"])
-trips.info()
+# %% - høre med GA
+#trips = pd.read_csv("../data/09.csv", parse_dates=["started_at", "ended_at"])
+#trips.info()
 
 # %% [markdown]
 # ### Group by common values
 
 # %%
-trips.groupby("start_station_name")
+#trips.groupby("start_station_name")
+trips %>% group_by(start_station_name) %>% summary()
+
+# %% - group size
+#trips.groupby("start_station_name").size()
+trips %>% group_by(start_station_name) %>% tally() %>% View()
+
+# %%group by size and arrange
+#trips.groupby("start_station_name").size().sort_values()
+trips %>% group_by(start_station_name) %>% tally() %>% arrange(desc(n)) %>%  View()
+
+# %% arrange by group size - no need to think about this in dplyr
+#trips.groupby("start_station_name").size().reset_index()
+# %%
+#trips.groupby("start_station_name").size().reset_index().rename(columns={0: "num_trips"})
 
 # %%
-trips.groupby("start_station_name").size()
+# (
+#   trips
+#   .groupby("start_station_name").size()
+#   .reset_index()
+#   .rename(columns={0: "num_trips"})
+#   .sort_values(by="num_trips")
+# )
+
+trips %>% 
+  group_by(start_station_name) %>% 
+  rename(num_trips=n) %>% tally() %>% 
+  arrange(desc(num_trips)) %>%  
+  View()
+
+
+
 
 # %%
-trips.groupby("start_station_name").size().sort_values()
+#trips.groupby(["start_station_name", "end_station_name"]).median()
 
-# %%
-trips.groupby("start_station_name").size().reset_index()
-
-# %%
-trips.groupby("start_station_name").size().reset_index().rename(columns={0: "num_trips"})
-
-# %%
-(
-  trips
-  .groupby("start_station_name").size()
-  .reset_index()
-  .rename(columns={0: "num_trips"})
-  .sort_values(by="num_trips")
-)
-
-# %%
-trips.groupby(["start_station_name", "end_station_name"]).median()
-
-# %%
-trips.groupby(["start_station_name", "end_station_name"]).agg({"duration": "median"})
+# %% summarise()
+#trips.groupby(["start_station_name", "end_station_name"]).agg({"duration": "median"})
+trips %>% 
+  group_by(start_station_name, end_station_name) %>% 
+  summarise(duration_median=median(duration)) %>%  
+  View()
