@@ -135,13 +135,14 @@ budget["Lån og garantier"]
 budget.loc[:, "Lån og garantier"]
 
 # %%
-pd.read_excel("../data/kap1.xlsx", sheet_name="1.2", header=4, index_col=0).rename(columns={"Budsjettiltak": "tiltak", "Lån og garantier": "lån"})
+pd.read_excel("../data/kap1.xlsx", sheet_name="1.2", header=4, index_col=0).rename(
+    columns={"Budsjettiltak": "tiltak", "Lån og garantier": "lån"}
+)
 
 # %%
-budget = (
-    pd.read_excel("../data/kap1.xlsx", sheet_name="1.2", header=4, index_col=0)
-    .rename(columns={"Budsjettiltak": "tiltak", "Lån og garantier": "lån"})
-)
+budget = pd.read_excel(
+    "../data/kap1.xlsx", sheet_name="1.2", header=4, index_col=0
+).rename(columns={"Budsjettiltak": "tiltak", "Lån og garantier": "lån"})
 
 # %% [markdown]
 # ### Exercise
@@ -167,10 +168,10 @@ pd.read_excel("../data/driftsinntekter-2021.xlsx", header=1)
 # Note that tidy data principles are closely tied to normalization of relational databases.
 
 # %%
-income = (
-    pd.read_excel("../data/driftsinntekter-2021.xlsx", header=1)
-    .rename(columns={"Category": "category"})
+income = pd.read_excel("../data/driftsinntekter-2021.xlsx", header=1).rename(
+    columns={"Category": "category"}
 )
+income
 
 # %% [markdown]
 # Is the `income` data frame tidy?
@@ -222,9 +223,15 @@ schedule = pd.DataFrame(
         "hour": [19, 20, 21, 22],
         "NRK1": ["Dagsrevyen", "Beat for beat", "Nytt på nytt", "Lindmo"],
         "TV2": ["Kjære landsmenn", "Forræder", "21-nyhetene", "Farfar"],
-        "TVNorge": ["The Big Bang Theory", "Alltid beredt", "Kongen befaler", "Praktisk info"],
+        "TVNorge": [
+            "The Big Bang Theory",
+            "Alltid beredt",
+            "Kongen befaler",
+            "Praktisk info",
+        ],
     }
 )
+schedule
 
 # %%
 schedule.melt(id_vars=["hour"], var_name="channel", value_name="program")
@@ -281,7 +288,9 @@ income.fillna(0)
 
 # %%
 budget = (
-    pd.read_excel("../data/kap1.xlsx", sheet_name="1.2", header=4, index_col=0, na_values="-")
+    pd.read_excel(
+        "../data/kap1.xlsx", sheet_name="1.2", header=4, index_col=0, na_values="-"
+    )
     .rename(columns={"Budsjettiltak": "tiltak", "Lån og garantier": "lån"})
     .fillna(0)
 )
@@ -404,40 +413,182 @@ trips.groupby("start_station_name").size().sort_values()
 trips.groupby("start_station_name").size().reset_index()
 
 # %%
-trips.groupby("start_station_name").size().reset_index().rename(columns={0: "num_trips"})
+(
+    trips.groupby("start_station_name")
+    .size()
+    .reset_index()
+    .rename(columns={0: "num_trips"})
+)
 
 # %%
 (
-    trips
-    .groupby("start_station_name").size()
+    trips.groupby("start_station_name")
+    .size()
     .reset_index()
     .rename(columns={0: "num_trips"})
     .sort_values(by="num_trips")
 )
 
 # %%
-trips.groupby(["start_station_name", "end_station_name"]).median()
+(
+    trips.groupby("end_station_name")
+    .size()
+    .reset_index()
+    .rename(columns={0: "num_trips"})
+    .sort_values(by="num_trips")
+)
 
 # %%
-trips.groupby(["start_station_name", "end_station_name"]).agg({"duration": "median"})
+num_trips = (
+    trips.groupby("start_station_name")
+    .size()
+    .reset_index()
+    .rename(columns={0: "num_trips"})
+    .sort_values(by="num_trips")
+)
 
 # %% [markdown]
 # ### Aggregations: sum, mean, median, first, count, ...
+
+# %%
+trips.groupby("start_station_name").median()
+
+# %%
+trips.groupby("start_station_name").agg(median_duration=("duration", "median"))
+
+# %%
+# Sidenote, we could do the size example as follows
+trips.groupby("start_station_name").agg(
+    num_trips=("start_station_name", "size")
+).reset_index().sort_values(by="num_trips")
+
+# %%
+trips.groupby("start_station_name").agg(
+    median_duration=("duration", "median"),
+    description=("start_station_description", "first"),
+)
+
+
+# %%
+def most_common(column):
+    return column.mode().iloc[0]
+
+
+trips.groupby("start_station_name").agg(
+    median_duration=("duration", "median"),
+    description=("start_station_description", "first"),
+    common_end_station=("end_station_name", most_common),
+)
+
+# %%
+trips.groupby(["start_station_name", "end_station_name"]).agg(
+    median_duration=("duration", "median")
+)
+
+# %%
+trips.groupby(["start_station_name", "end_station_name"]).agg(
+    median_duration=("duration", "median"),
+    start_station_description=("start_station_description", "first"),
+    end_station_description=("end_station_description", "first"),
+)
+
+# %%
+trips.groupby(["start_station_name", "end_station_name"]).agg(
+    median_duration=("duration", "median"),
+    start_station_description=("start_station_description", "first"),
+    end_station_description=("end_station_description", "first"),
+).reset_index()
 
 # %% [markdown]
 # ### Exercise
 
 # %% [markdown]
 # ## Combine Data Tables
+#
+# We have two files with the same kinds of data: `08.csv` with data for August and `09.csv` with data for September. How can we combine them into one DataFrame?
+
+# %%
+data_aug = pd.read_csv("../data/08.csv", parse_dates=["started_at", "ended_at"])
+data_sep = pd.read_csv("../data/09.csv", parse_dates=["started_at", "ended_at"])
 
 # %% [markdown]
 # ### Append tables with similar data
+
+# %%
+pd.concat([data_aug, data_sep])
+
+# %%
+pd.concat([data_aug, data_sep]).reset_index()
+
+# %%
+pd.concat([data_aug, data_sep]).reset_index(drop=True)
+
+# %%
+for filnavn in ["../data/08.csv", "../data/09.csv"]:
+    print(filnavn)
+
+# %%
+for filnavn in ["../data/08.csv", "../data/09.csv"]:
+    print(filnavn)
+    data = pd.read_csv(filnavn, parse_dates=["started_at", "ended_at"])
+
+# %%
+data.started_at
+
+# %%
+months = []
+for filnavn in ["../data/08.csv", "../data/09.csv"]:
+    print(filnavn)
+    months.append(pd.read_csv(filnavn, parse_dates=["started_at", "ended_at"]))
+
+# %%
+months
+
+# %%
+months = []
+for filnavn in ["../data/08.csv", "../data/09.csv"]:
+    print(filnavn)
+    months.append(pd.read_csv(filnavn, parse_dates=["started_at", "ended_at"]))
+data = pd.concat(months).reset_index(drop=True)
+
+# %%
+data
+
+# %%
+import pathlib
+
+pathlib.Path.cwd().parent / "data"
+
+# %%
+(pathlib.Path.cwd().parent / "data").glob("*.csv")
+
+# %%
+list((pathlib.Path.cwd().parent / "data").glob("*.csv"))
+
+# %%
+months = []
+for filnavn in ["../data/08.csv", "../data/09.csv"]:
+    print(filnavn)
+    months.append(pd.read_csv(filnavn, parse_dates=["started_at", "ended_at"]))
+data = pd.concat(months).reset_index(drop=True)
 
 # %% [markdown]
 # ### Exercise
 
 # %% [markdown]
 # ### Join tables with common variables
+
+# %%
+num_trips
+
+# %%
+trip_lengths = (
+    trips.groupby("start_station_name")
+    .agg({"duration": "median"})
+    .reset_index()
+    .sort_values(by="duration")
+)
+trip_lengths
 
 # %% [markdown]
 # ### Exercise
