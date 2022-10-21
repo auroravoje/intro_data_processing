@@ -501,14 +501,30 @@ trips %>% group_by(start_station_name) %>% tally() %>% arrange(desc(n)) %>%  Vie
 
 trips %>% 
   group_by(start_station_name) %>% 
-  rename(num_trips=n) %>% tally() %>% 
+  tally() %>% 
+  rename(num_trips=n) %>%
   arrange(desc(num_trips)) %>%  
   View()
 
+# num_trips = (
+#   trips.groupby("start_station_name")
+#   .size()
+#   .reset_index()
+#   .rename(columns={0: "num_trips"})
+#   .sort_values(by="num_trips")
+# )
+
+num_trips = trips %>% 
+  group_by(start_station_name) %>% 
+  tally() %>% 
+  rename(num_trips=n) %>% 
+  arrange(desc(num_trips)) 
 
 
+# custom function?
 
-# %%
+
+# %% group by multiple variables:
 #trips.groupby(["start_station_name", "end_station_name"]).median()
 
 # %% summarise()
@@ -517,3 +533,75 @@ trips %>%
   group_by(start_station_name, end_station_name) %>% 
   summarise(duration_median=median(duration)) %>%  
   View()
+
+
+# %% [markdown]
+# ## Combine Data Tables
+#
+# We have two files with the same kinds of data: `08.csv` with data for August and `09.csv` with data for September. How can we combine them into one DataFrame?
+
+# %%
+#data_aug = pd.read_csv("../data/08.csv", parse_dates=["started_at", "ended_at"])
+data_aug = read_csv(paste(data_path,"08.csv",sep=""))
+#data_sep = pd.read_csv("../data/09.csv", parse_dates=["started_at", "ended_at"])
+data_sept = read_csv(paste(data_path,"09.csv",sep=""))
+
+
+# %% [markdown]
+# ### Append tables with similar data
+data_aug %>% bind_rows(data_sept) %>% View()
+# %%
+#pd.concat([data_aug, data_sep])
+#pd.concat([data_aug, data_sep]).reset_index()
+#pd.concat([data_aug, data_sep]).reset_index(drop=True)
+
+# %% read in multiple files:
+list_of_files <- list.files(path = data_path,
+                            recursive = TRUE,
+                            pattern = "\\.csv$",
+                            full.names = TRUE)
+
+data <- readr::read_csv(list_of_files)#, id = "file_name")
+
+
+# %% [markdown]
+# ### Exercise
+
+# %% [markdown]
+# ### Join tables with common variables
+
+# %%
+num_trips
+
+# %%
+# trip_lengths = (
+#   trips.groupby("start_station_name")
+#   .agg({"duration": "median"})
+#   .reset_index()
+#   .sort_values(by="duration")
+# )
+# trip_lengths
+
+trip_lengths <- trips %>% 
+  group_by(start_station_name) %>% 
+  summarise(duration_median = median(duration)) %>% 
+  arrange(desc(duration_median))
+
+
+# %% [markdown]
+# ### Exercise
+
+# %% [markdown]
+# ## Sharing Insights
+
+# %% [markdown]
+# ### Mess up data for presentation
+
+# %% [markdown]
+# ### Save to Excel
+
+# %% [markdown]
+# ### More visualizations
+
+# %% [markdown]
+#
