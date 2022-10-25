@@ -1,5 +1,7 @@
+# %%
 library(tidyverse)
 library(readxl)
+# %%
 #important commands:
 #pipe operator: ctrl + shift + m
 #run by line windows: shift + enter 
@@ -473,11 +475,11 @@ spec(trips)
 # %% [markdown]
 # ### Group by common values
 
-# %%
+# %% View grouped dataframe:
 #trips.groupby("start_station_name")
-trips %>% group_by(start_station_name) %>% summary()
+trips %>% group_by(start_station_name)
 
-# %% - group size
+# %% - group sizes
 #trips.groupby("start_station_name").size()
 trips %>% group_by(start_station_name) %>% tally() %>% View()
 
@@ -521,7 +523,45 @@ num_trips = trips %>%
   arrange(desc(num_trips)) 
 
 
-# custom function?
+# %% ######## Aggregations - summarize ############
+# %%
+#trips.groupby("start_station_name").median()
+# group by station, summarise with median, get the name of the station 
+# (with extraction first entry of the name of group, 
+# the names will be the same per group)
+
+trips %>% 
+  group_by(start_station_name) %>% 
+  summarise(median_duration = median(duration),
+            description = first(start_station_description)) %>% 
+  View()
+
+
+# custom function - not sure this is necessary?
+#Mode: The most frequent number—that is, 
+#the number that occurs the highest number of times. 
+#Example: The mode of {4 , 2, 4, 3, 2, 2} is 2
+# will this work?
+trips %>% 
+  group_by(start_station_name) %>%
+  summarise(median_duration = median(duration),
+            description = first(start_station_name),
+            common_end_station = mode(end_station_name)) %>% 
+  View()
+ 
+# ? mode tells you what this function does in R
+# need to make a custom function
+mode <- function(x) { 
+  names(which.max(table(x))) 
+  }
+
+trips %>%
+  group_by(start_station_name) %>%
+  summarise(median_duration = median(duration),
+            description = first(start_station_name),
+            common_end_station = mode(end_station_name)) %>% 
+  View()
+
 
 
 # %% group by multiple variables:
@@ -533,6 +573,15 @@ trips %>%
   group_by(start_station_name, end_station_name) %>% 
   summarise(duration_median=median(duration)) %>%  
   View()
+
+# %% get 
+trips %>% group_by(start_station_name, end_station_name) %>% 
+  summarise(median_duration = median(duration),
+            start_station_description = first(start_station_description),
+            end_station_description = first(end_station_description)) %>% 
+  View()
+
+
 
 
 # %% [markdown]
@@ -587,6 +636,109 @@ trip_lengths <- trips %>%
   summarise(duration_median = median(duration)) %>% 
   arrange(desc(duration_median))
 
+trip_lengths
+
+
+
+# %% join trips and lengths on the station name:
+#pd.merge(num_trips, trip_lengths)
+# it recognizes the same name!
+num_trips %>% left_join(trip_lengths) 
+
+
+# %%
+# num_trips_from = (
+#   trips.groupby("start_station_name")
+#   .agg(num_trips=("start_station_name", "size"))
+#   .sort_values(by="num_trips")
+#   .reset_index()
+# )
+# num_trips_from
+
+num_trips_from <- trips %>% 
+  group_by(start_station_name) %>% 
+  tally() %>% 
+  rename(num_trips = n) %>% 
+  arrange(num_trips)
+
+num_trips_from
+
+# %%
+# num_trips_to = (
+#   trips.groupby("end_station_name")
+#   .agg(num_trips=("end_station_name", "size"))
+#   .sort_values(by="num_trips")
+#   .reset_index()
+# )
+# num_trips_to
+
+num_trips_to <- trips %>% 
+  group_by(end_station_name) %>% 
+  tally() %>% 
+  rename(num_trips = n) %>% 
+  arrange(num_trips)
+
+num_trips_to
+
+
+# %% 
+#pd.merge(num_trips_from, num_trips_to)
+num_trips_from %>% inner_join(num_trips_to) 
+
+
+#HERE: .py line 620
+# %%
+pd.merge(
+  num_trips_from,
+  num_trips_to,
+  left_on="start_station_name",
+  right_on="end_station_name",
+)
+
+# %%
+popular_from = num_trips_from.nlargest(10, "num_trips")
+popular_to = num_trips_to.nlargest(10, "num_trips")
+
+# %%
+pd.merge(
+  popular_from, popular_to, left_on="start_station_name", right_on="end_station_name"
+)
+
+# %%
+pd.merge(
+  popular_from,
+  popular_to,
+  how="inner",
+  left_on="start_station_name",
+  right_on="end_station_name",
+)
+
+# %%
+pd.merge(
+  popular_from,
+  popular_to,
+  how="left",
+  left_on="start_station_name",
+  right_on="end_station_name",
+)
+
+# %%
+pd.merge(
+  popular_from,
+  popular_to,
+  how="right",
+  left_on="start_station_name",
+  right_on="end_station_name",
+)
+
+# %%
+pd.merge(
+  popular_from,
+  popular_to,
+  how="outer",
+  left_on="start_station_name",
+  right_on="end_station_name",
+)
 
 # %% [markdown]
 # ### Exercise
@@ -597,11 +749,46 @@ trip_lengths <- trips %>%
 # %% [markdown]
 # ### Mess up data for presentation
 
+# %%
+from_to = (
+  trips.groupby(["start_station_name", "end_station_name"])
+  .agg(num_trips=("start_station_name", "size"))
+  .reset_index()
+  .sort_values(by="num_trips")
+)
+
+# %%
+from_to.query(
+  "start_station_name.isin(@popular_from.start_station_name) and end_station_name.isin(@popular_to.end_station_name)"
+).pivot_table(
+  index="start_station_name", columns="end_station_name", values="num_trips"
+)
+
 # %% [markdown]
 # ### Save to Excel
 
 # %% [markdown]
 # ### More visualizations
 
-# %% [markdown]
-#
+# %%
+from_to
+
+# %%
+num_trips_to = (
+  trips.groupby("end_station_name")
+  .agg(num_trips=("end_station_name", "size"), lat=("end_station_latitude", "first"), lon=("end_station_longitude", "first"))
+  .sort_values(by="num_trips")
+  .reset_index()
+)
+
+# %%
+import numpy as np
+pd.merge(
+  num_trips_from,
+  num_trips_to,
+  left_on="start_station_name",
+  right_on="end_station_name",
+  suffixes=("_from", "_to")
+).assign(from_over_to=lambda df: np.log(df.num_trips_from/df.num_trips_to)).plot.scatter(x="lon", y="lat", c="from_over_to")
+
+# %%
