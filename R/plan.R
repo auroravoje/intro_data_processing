@@ -686,59 +686,76 @@ num_trips_to
 num_trips_from %>% inner_join(num_trips_to) 
 
 
-#HERE: .py line 620
-# %%
-pd.merge(
-  num_trips_from,
-  num_trips_to,
-  left_on="start_station_name",
-  right_on="end_station_name",
-)
 
 # %%
-popular_from = num_trips_from.nlargest(10, "num_trips")
-popular_to = num_trips_to.nlargest(10, "num_trips")
+# pd.merge(
+#   num_trips_from,
+#   num_trips_to,
+#   left_on="start_station_name",
+#   right_on="end_station_name",
+# )
+
+num_trips_from %>% 
+  left_join(num_trips_to, by = c("start_station_name"="end_station_name")) %>% 
+  View()
+
 
 # %%
-pd.merge(
-  popular_from, popular_to, left_on="start_station_name", right_on="end_station_name"
-)
+#popular_from = num_trips_from.nlargest(10, "num_trips")
+#popular_to = num_trips_to.nlargest(10, "num_trips")
+popular_from = num_trips_from %>% top_n(10, num_trips)
+popular_to = num_trips_to %>% top_n(10, num_trips)
+
 
 # %%
-pd.merge(
-  popular_from,
-  popular_to,
-  how="inner",
-  left_on="start_station_name",
-  right_on="end_station_name",
-)
+# pd.merge(
+#   popular_from, popular_to, left_on="start_station_name", right_on="end_station_name"
+# )
+popular_from %>% 
+  inner_join(popular_to, by = c("start_station_name"="end_station_name")) %>% 
+  View()
+
 
 # %%
-pd.merge(
-  popular_from,
-  popular_to,
-  how="left",
-  left_on="start_station_name",
-  right_on="end_station_name",
-)
+# pd.merge(
+#   popular_from,
+#   popular_to,
+#   how="left",
+#   left_on="start_station_name",
+#   right_on="end_station_name",
+# )
+popular_from %>% 
+  left_join(popular_to, by = c("start_station_name"="end_station_name")) %>% 
+  View()
+
 
 # %%
-pd.merge(
-  popular_from,
-  popular_to,
-  how="right",
-  left_on="start_station_name",
-  right_on="end_station_name",
-)
+# pd.merge(
+#   popular_from,
+#   popular_to,
+#   how="right",
+#   left_on="start_station_name",
+#   right_on="end_station_name",
+# )
+popular_from %>% 
+  right_join(popular_to, by = c("start_station_name"="end_station_name")) %>% 
+  View()
+
+
 
 # %%
-pd.merge(
-  popular_from,
-  popular_to,
-  how="outer",
-  left_on="start_station_name",
-  right_on="end_station_name",
-)
+# pd.merge(
+#   popular_from,
+#   popular_to,
+#   how="outer",
+#   left_on="start_station_name",
+#   right_on="end_station_name",
+# )
+popular_from %>% 
+  full_join(popular_to, by = c("start_station_name"="end_station_name")) %>% 
+  View()
+
+
 
 # %% [markdown]
 # ### Exercise
@@ -750,12 +767,17 @@ pd.merge(
 # ### Mess up data for presentation
 
 # %%
-from_to = (
-  trips.groupby(["start_station_name", "end_station_name"])
-  .agg(num_trips=("start_station_name", "size"))
-  .reset_index()
-  .sort_values(by="num_trips")
-)
+# from_to = (
+#   trips.groupby(["start_station_name", "end_station_name"])
+#   .agg(num_trips=("start_station_name", "size"))
+#   .reset_index()
+#   .sort_values(by="num_trips")
+# )
+from_to <- trips %>% 
+  group_by(start_station_name, end_station_name) %>% 
+  tally() %>% 
+  rename(num_trips=n) %>% 
+  arrange(num_trips)
 
 # %%
 from_to.query(
@@ -764,6 +786,14 @@ from_to.query(
   index="start_station_name", columns="end_station_name", values="num_trips"
 )
 
+from_to %>% 
+  filter((start_station_name %in% popular_from$start_station_name) &
+         (end_station_name %in% popular_to$end_station_name)) %>% 
+  pivot_wider(names_from=end_station_name, values_from=num_trips) %>% 
+  View()
+
+# Exercize: Fill NA?
+#HERE: .py line 698
 # %% [markdown]
 # ### Save to Excel
 
@@ -771,24 +801,24 @@ from_to.query(
 # ### More visualizations
 
 # %%
-from_to
+#from_to
 
 # %%
-num_trips_to = (
-  trips.groupby("end_station_name")
-  .agg(num_trips=("end_station_name", "size"), lat=("end_station_latitude", "first"), lon=("end_station_longitude", "first"))
-  .sort_values(by="num_trips")
-  .reset_index()
-)
-
-# %%
-import numpy as np
-pd.merge(
-  num_trips_from,
-  num_trips_to,
-  left_on="start_station_name",
-  right_on="end_station_name",
-  suffixes=("_from", "_to")
-).assign(from_over_to=lambda df: np.log(df.num_trips_from/df.num_trips_to)).plot.scatter(x="lon", y="lat", c="from_over_to")
-
-# %%
+# num_trips_to = (
+#   trips.groupby("end_station_name")
+#   .agg(num_trips=("end_station_name", "size"), lat=("end_station_latitude", "first"), lon=("end_station_longitude", "first"))
+#   .sort_values(by="num_trips")
+#   .reset_index()
+# )
+# 
+# # %%
+# import numpy as np
+# pd.merge(
+#   num_trips_from,
+#   num_trips_to,
+#   left_on="start_station_name",
+#   right_on="end_station_name",
+#   suffixes=("_from", "_to")
+# ).assign(from_over_to=lambda df: np.log(df.num_trips_from/df.num_trips_to)).plot.scatter(x="lon", y="lat", c="from_over_to")
+# 
+# # %%
