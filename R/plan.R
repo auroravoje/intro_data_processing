@@ -33,7 +33,7 @@ summary(read_excel(paste(getwd(),"/data/kap1.xlsx",sep=""), sheet="1.2"))
 # ### Add parameters to read Excel data properly
 # %%
 #pd.read_excel("../data/kap1.xlsx", sheet_name="1.2", header=5)
-df_sheet <- read_excel(paste(getwd(),"/data/kap1.xlsx",sep=""), sheet="1.2", skip=5) %>% 
+read_excel(paste(getwd(),"/data/kap1.xlsx",sep=""), sheet="1.2", skip=5) %>% 
   View()
 
 # %%
@@ -53,8 +53,11 @@ summary(budget)
 
 # %% extract first row: 
 #budget.loc[0]
-budget_columns <- colnames(budget)
+
+#baseR:
 budget[1,]
+
+#dplyr:
 budget %>% head(1) %>% View()
 
 # %% extract 
@@ -200,7 +203,7 @@ budget %>%
   ggplot() +
   geom_point(aes(x=land,y=lån))
 
-# %% histogram
+# %% barplot
 #budget.plot.barh()
 budget %>%
   arrange(-desc(tiltak)) %>% 
@@ -231,21 +234,18 @@ TVNorge <- c("The Big Bang Theory", "Alltid beredt", "Kongen befaler", "Praktisk
 #dataframe:
 schedule <-data.frame(hour,NRK1,TV2,TVNorge)
 
-# %%
-#schedule.melt(id_vars=["hour"], var_name="channel", value_name="program")
 
+#schedule.melt(id_vars=["hour"], var_name="channel", value_name="program")
 schedule <- schedule %>% 
   gather(channel, program, "NRK1":"TVNorge") %>% View()
 
-# %% [markdown]
 # ## Process Data
-
-# %% [markdown]
 # ### Handle missing values
 
 # %%
 #income.info()
 summary(income)
+
 # %% specifying the column types:
 # (
 #   pd.read_excel("../data/driftsinntekter-2021.xlsx", header=1)
@@ -328,7 +328,6 @@ income %>%
   View()
 
 
-# %% [markdown]
 # ### Select variables and observations
 
 # %%
@@ -503,8 +502,7 @@ trips %>% group_by(start_station_name) %>% tally() %>% arrange(desc(n)) %>%  Vie
 
 trips %>% 
   group_by(start_station_name) %>% 
-  tally() %>% 
-  rename(num_trips=n) %>%
+  tally(name="num_trips") %>% 
   arrange(desc(num_trips)) %>%  
   View()
 
@@ -674,8 +672,7 @@ num_trips_from
 
 num_trips_to <- trips %>% 
   group_by(end_station_name) %>% 
-  tally() %>% 
-  rename(num_trips = n) %>% 
+  tally(name="num_trips") %>% 
   arrange(num_trips)
 
 num_trips_to
@@ -758,7 +755,7 @@ popular_from %>%
 
 
 # %% [markdown]
-# ### Exercise
+# ### Exercise  _ ADD HERE:
 
 # %% [markdown]
 # ## Sharing Insights
@@ -780,19 +777,18 @@ from_to <- trips %>%
   arrange(num_trips)
 
 # %%
-from_to.query(
-  "start_station_name.isin(@popular_from.start_station_name) and end_station_name.isin(@popular_to.end_station_name)"
-).pivot_table(
-  index="start_station_name", columns="end_station_name", values="num_trips"
-)
+# from_to.query(
+#   "start_station_name.isin(@popular_from.start_station_name) and end_station_name.isin(@popular_to.end_station_name)"
+# ).pivot_table(
+#   index="start_station_name", columns="end_station_name", values="num_trips"
+# )
 
 from_to %>% 
-  filter((start_station_name %in% popular_from$start_station_name) &
-         (end_station_name %in% popular_to$end_station_name)) %>% 
-  pivot_wider(names_from=end_station_name, values_from=num_trips) %>% 
+  filter((start_station_name %in% popular_from$start_station_name) & (end_station_name %in% popular_to$end_station_name)) %>% 
+  pivot_wider(names_from=end_station_name, values_from=num_trips) %>%
   View()
 
-# Exercize: Fill NA?
+# Exercize: Inspect dataframe, process the last step. (Fill NA)
 #HERE: .py line 698
 # %% [markdown]
 # ### Save to Excel
@@ -810,8 +806,16 @@ from_to %>%
 #   .sort_values(by="num_trips")
 #   .reset_index()
 # )
+# %% - 
+num_trips_to <- trips %>% 
+  group_by(end_station_name) %>% 
+  summarise(num_trips = length(end_station_name),
+            lat = first(end_station_latitude),
+            lon = first(end_station_longitude)) %>% 
+  arrange(num_trips) 
+
 # 
-# # %%
+# # %% create a scatter plot of the most popular to and from stations 
 # import numpy as np
 # pd.merge(
 #   num_trips_from,
@@ -822,3 +826,9 @@ from_to %>%
 # ).assign(from_over_to=lambda df: np.log(df.num_trips_from/df.num_trips_to)).plot.scatter(x="lon", y="lat", c="from_over_to")
 # 
 # # %%
+num_trips_from %>% 
+  inner_join(num_trips_to, by = c("start_station_name"="end_station_name")) %>%
+  mutate(from_to = log(num_trips.x/num_trips.y)) %>% 
+  ggplot() +
+  geom_point(aes(x=lat,y=lon, color=from_to)) +
+  scale_fill_gradient(low = "grey", high = "brown")
