@@ -1,3 +1,5 @@
+# Exercise 2
+#
 # Tidy the following data frame:
 #
 # |   hour | NRK1          | TV2             | TVNorge             |
