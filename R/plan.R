@@ -4,26 +4,31 @@ library(readxl)
 
 # important commands:
 # pipe operator: ctrl + shift + m (pipe means "then" -  do this, then do that)
-# run by line windows: shift + enter 
+# run by line windows: ctrl + enter 
 # run by line mac: command + enter)
+
 # indent code mac: command + I 
 # code multiple lines: shift + command + c
+
 # clear your space: rm(list = ls())
 
 #get and set working directory
 getwd()
+
 setwd("/Users/avoje001/Documents/customers/FFI/intro_data_processing")
+
 data_path = paste(getwd(),"/data/",sep="")
 
 # read data with read_excel():
 read_excel(paste(data_path,"kap1.xlsx",sep=""))
+
 # read data, specify excel sheet:
 read_excel(paste(data_path,"kap1.xlsx",sep=""), sheet="1.2") 
 
 # inspect dataframe by piping into a View: (If you want, you can also name the View)
 read_excel(paste(data_path,"kap1.xlsx",sep="")) %>% View("sheet1")
 
-read_excel(paste(data_path,"kap1.xlsx",sep=""), sheet="1.2") %>% View("sheet2")
+sheet3 <- read_excel(paste(data_path,"kap1.xlsx",sep=""), sheet="1.2") #%>% View("sheet3")
 
 
 # ### Inspect the summary of the data frames
@@ -61,10 +66,10 @@ budget %>%
   head(1) %>% View()
 
 # extract all rows belonging to Norway 
-budget %>% 
-  rename(Land = 1) %>% 
-  filter(Land =="Norge") %>% 
-  View()
+new_budget <- budget %>% 
+  rename(Land = ...1) %>% 
+  filter(Land =="Norge") #%>% 
+  #View()
 
 # select columns the dplyr way
 budget %>% 
@@ -84,7 +89,7 @@ budget$`Lån og garantier`
 budget <- read_excel(paste(getwd(),"/data/kap1.xlsx",sep=""), sheet="1.2", skip=4) %>% 
           rename(land = 1,
                  tiltak = Budsjettiltak, 
-                 lån = `Lån og garantier`)
+                 lån = "Lån og garantier")
   
    
 # ### Exercise 1 - read in data: 
@@ -97,10 +102,8 @@ budget <- read_excel(paste(getwd(),"/data/kap1.xlsx",sep=""), sheet="1.2", skip=
 #
 # https://readxl.tidyverse.org/
 
-
 # Solution
-read_excel(paste(getwd(),"/data/driftsinntekter-2021.xlsx",sep=""), skip=1) %>% View()
-
+read_excel(paste(data_path,"driftsinntekter-2021.xlsx",sep=""), skip=1) %>% View()
 
 # ## Tidy Data
 # ### Observations and variables
@@ -132,7 +135,7 @@ read_excel(paste(getwd(),"/data/driftsinntekter-2021.xlsx",sep=""),skip=1) %>%
 # read in data, rename Category column, gather by year, income, year interval, view
 read_excel(paste(getwd(),"/data/driftsinntekter-2021.xlsx",sep=""),skip=1) %>% 
   rename(category=Category) %>% 
-  gather(year,income,"2019":"2021") %>% View()
+  gather(year,values,"2019":"2021") %>% View()
 
 # save data to income dataframe
 income <- read_excel(paste(getwd(),"/data/driftsinntekter-2021.xlsx",sep=""),skip=1) %>% 
@@ -151,8 +154,7 @@ TV2 <- c("Kjære landsmenn", "Forræder", "21-nyhetene", "Farfar")
 TVNorge <- c("The Big Bang Theory", "Alltid beredt", "Kongen befaler", "Praktisk info")
 
 #Add columns to the dataframe:
-schedule <-data.frame(hour,NRK1,TV2,TVNorge)
-
+schedule <- data.frame(hour,NRK1,TV2,TVNorge)
 
 #Gather the dataframe so you have columns: hour, channel, program,
 # Solution:
@@ -164,16 +166,15 @@ schedule <- schedule %>%
 #Handle missing values
 
 # do summary on your income dataframe: 
-income %>% summary()
+income %>% summary() %>% View()
 
 # tidy the income so it has colums: category, year, income, inspect it
 read_excel(paste(getwd(),"/data/driftsinntekter-2021.xlsx",sep=""),skip=1) %>% 
   rename(category=Category) %>% 
   gather(year, income, "2019":"2021") %>% 
   mutate(year = as.factor(year)) %>% 
+  summary() %>% 
   View()
-  
-#summary()
 
 
 
@@ -183,9 +184,9 @@ read_excel(paste(getwd(),"/data/driftsinntekter-2021.xlsx",sep=""),skip=1) %>%
   rename(category=Category) %>% 
   gather(year, income, "2019":"2021") %>% 
   mutate(year = as.factor(year),
-         income = as.numeric(income)
-         ) %>% 
-  summary() 
+         income = as.numeric(income)) %>% 
+  summary() %>% 
+  View()
 
 
 # Fix this by adjusting NA-encoding on read-in: 
@@ -194,8 +195,7 @@ read_excel(paste(getwd(),"/data/driftsinntekter-2021.xlsx",sep=""), skip=1, na="
   rename(category=Category) %>% 
   gather(year, income, "2019":"2021") %>% 
   mutate(year = as.factor(year),
-         income = as.numeric(income)
-  ) %>% 
+         income = as.numeric(income)) %>% 
   summary()
 
 
@@ -234,21 +234,23 @@ budget$tiltak
 budget["tiltak"]
 
 #dplyr syntax: in budget dataframe select columns land and tiltak: 
-budget %>% select(land,tiltak)
+budget %>% select(land, tiltak) %>% View()
 
 # filter all columns that have land Norway: 
-budget %>% filter(land=="Norge")
+budget %>% filter(land=="Norge") %>% View()
 
 # filter all columns that have land Norge, Sverige
-budget %>% filter(land == "Norge" |  land=="Sverige") 
+budget %>% filter(land == "Norge" | land=="Sverige") %>% View()
 
 #filter all Nordic countries: Norge, Sverige, Danmark, Finland: 
-budget %>% filter(land=="Norge" | land == "Sverige" | land=="Danmark" | land == "Finland")
+budget %>% filter(land=="Norge" | land == "Sverige" | 
+                  land=="Danmark" | land == "Finland") %>% View()
  
 # filter all nordic countries and select the column lån
 budget %>% filter(land=="Norge" | land == "Sverige" | 
-                    land=="Danmark" | land == "Finland") %>% 
-  select(lån)
+                  land=="Danmark" | land == "Finland") %>% 
+  select(lån) %>% 
+  View()
 
 # Filtering by row index
 
@@ -261,18 +263,26 @@ budget %>% slice(5)
 # specify specific rows 
 #baseR:
 budget[5:9,]
+
 #dplyr:
 budget %>% slice(5:9)
 
 # get rows 5 to 9, and then select columns land and tiltak
-budget %>% slice(5:9) %>% select(land, tiltak)
+budget %>% 
+  slice(5:9) %>% 
+  select(land, tiltak)
 
 # filter by row (Norge) and then select by column (tiltak)
-budget %>% filter(land=="Norge") %>% 
-  select(tiltak)
+budget %>% 
+  filter(land=="Norge") %>% 
+  select(tiltak) %>% 
+  View()
 
 # filter by row, select the third column
-budget %>% filter(land=="Norge") %>% select(3)
+budget %>% 
+  filter(land=="Norge") %>% 
+  select(2) %>% 
+  View()
 
 # ### Combine variables
 
@@ -281,13 +291,14 @@ budget$tiltak + budget$lån
 
 # dplyr: add a column named total = tiltak + lån
 budget %>% 
-  mutate(total = tiltak + lån)
+  mutate(total = tiltak + lån) %>% 
+  View()
 
 # ### Filter observations (conditional filtering)
 
 #filter budget by rows where tiltak > 6
 budget %>% 
-  filter(tiltak > 6)
+  filter(tiltak > 6)  
 
 # filter budget by rows where lån < 3
 budget %>% 
@@ -299,16 +310,15 @@ budget %>% filter(tiltak >= lån)
 # ### Sort (arrange) observations
 
 # arrange budget by lån-column
-budget %>% arrange(lån)
+budget %>% arrange(lån) %>% View()
 
 # arrange budget by descending lån-column
-budget %>% arrange(desc(lån))
+budget %>% arrange(desc(lån)) %>% View()
 
 # arrange budget by lån and tiltak
-budget %>% arrange(lån, tiltak)
+budget %>% arrange(desc(lån), desc(tiltak)) %>% View()
 
 # ### Exercise 3
-
 # re-use the income code we built and arrange the dataframe by 
 # descending year and income columns:
 
@@ -316,22 +326,17 @@ income <- read_excel(paste(getwd(),"/data/driftsinntekter-2021.xlsx",sep=""),ski
   rename(category=Category) %>% 
   gather(year, income, "2019":"2021") %>% 
   mutate(year = as.factor(year),
-         income = as.numeric(income)
-  ) %>% 
-  drop_na() 
+         income = as.numeric(income)) %>% 
+  drop_na() %>% 
   # add code here:
-  
+  arrange(desc(year),desc(income))
 
-
-
-# %>% 
-  # arrange(desc(year),desc(income))
 
 # ## Aggregate Data
 
 # ### Bigger datasets
-
 # read csv
+
 trips = read_csv(paste(data_path,"/09.csv",sep=""))
 
 #inspect information of the dataframe:
@@ -366,7 +371,7 @@ trips %>%
 # rename the n-variable tally() creates
 
 # by rename():
-num_trips = trips %>% 
+num_trips <- trips %>% 
   group_by(start_station_name) %>% 
   tally() %>% 
   rename(num_trips=n) %>% 
@@ -399,6 +404,7 @@ trips %>%
 # the number that occurs the highest number of times. 
 # Example: The mode of {4 , 2, 4, 3, 2, 2} is 2.
 # Will this work?
+
 trips %>% 
   group_by(start_station_name) %>%
   summarise(median_duration = median(duration),
@@ -410,15 +416,16 @@ trips %>%
 # the built-in mode does something else
 # need to make a custom function
 # x represents the column name
-mode <- function(x) { 
-  names(which.max(table(x))) 
+
+my_mode <- function(x) { 
+  names(which.max(table(x)))
   }
 
 trips %>%
   group_by(start_station_name) %>%
   summarise(median_duration = median(duration),
             description = first(start_station_name),
-            common_end_station = mode(end_station_name)) %>% 
+            common_end_station = my_mode(end_station_name)) %>% 
   View()
 
 
@@ -429,7 +436,9 @@ trips %>%
 # summarise with median trip duration
 trips %>% 
   group_by(start_station_name, end_station_name) %>% 
-  summarise(duration_median=median(duration)) %>%  
+  summarise(duration_median=median(duration),
+            num_trips_start = length(start_station_name)
+            ) %>%  
   View()
 
 # add the station start and end station description of the groups,
@@ -457,9 +466,8 @@ data_sept = read_csv(paste(data_path,"09.csv",sep=""))
 # Append tables with similar data
 # one dataframe under the other
 
-data_aug %>% 
-  bind_rows(data_sept) %>% 
-  View()
+data <- data_aug %>% 
+  bind_rows(data_sept) 
 
 #When many files, individual read in can be automatized:
 # read in multiple files:
@@ -477,14 +485,11 @@ data <- read_csv(list_of_files)#, id = "file_name") #<- adds a column with filen
 # Do they differ much?
 
 # implement library(lubridate)
-# use the data dataframe,
-# filter for the trip given above
-# mutate a new column called month by month = lubridate::month(started_at), 
-# group each dataframe by start_station_name
-# and end_station_name,
-# summarise the duration with median, and view
 
 # Solution:
+library(lubridate)
+
+
 data %>% 
   filter(start_station_name == "Lakkegata" & end_station_name=="Sukkerbiten") %>% 
   mutate(month = month(started_at)) %>% 
